@@ -3,6 +3,7 @@
 import type { CartItem, Product } from '@/lib/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { products } from '@/lib/data';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -16,6 +17,18 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Map old product IDs to new prod_X format
+const productIdMap: Record<string, string> = {
+  'turbocharger': 'prod_1',
+  'brake-kit': 'prod_2',
+  'suspension': 'prod_3',
+  'exhaust': 'prod_4',
+  'racing-seat': 'prod_5',
+  'carbon-hood': 'prod_6',
+  'intercooler': 'prod_7',
+  'racing-wheel': 'prod_8',
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
@@ -23,7 +36,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
     if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
+      try {
+        const parsedCart = JSON.parse(storedCart) as CartItem[];
+        setCartItems(parsedCart);
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        localStorage.removeItem('cart');
+      }
     }
   }, []);
 

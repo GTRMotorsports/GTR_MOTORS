@@ -19,8 +19,9 @@ const statusMap = {
   Cancelled: 0,
 };
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  const order = orders.find((o) => o.id === params.id);
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const order = orders.find((o) => o.id === id);
   // In a real app, you might show an order confirmation even if it's not in the mock list yet
   const isMockOrder = !order;
 
@@ -32,7 +33,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const statusLevel = statusMap[currentStatus] || 1;
   
   const finalOrder = order || {
-    id: params.id,
+    id: id,
     date: new Date().toISOString().split('T')[0],
     status: 'Processing',
     total: 0,

@@ -10,11 +10,23 @@ import { Separator } from '@/components/ui/separator';
 import { Minus, Plus, Trash2, ArrowRight, ShoppingCart } from 'lucide-react';
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, cartTotal, totalItems } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, cartTotal, totalItems, clearCart } = useCart();
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <h1 className="font-headline text-4xl font-bold mb-8">Your Cart</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="font-headline text-4xl font-bold">Your Cart</h1>
+        {totalItems > 0 && (
+          <Button 
+            variant="outline" 
+            onClick={clearCart}
+            className="border-red-500/50 text-red-500 hover:bg-red-500/10 hover:text-red-400"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Clear Cart
+          </Button>
+        )}
+      </div>
       {totalItems > 0 ? (
         <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
           <div className="lg:col-span-2 space-y-4">

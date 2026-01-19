@@ -160,14 +160,29 @@ def list_orders_endpoint(db: Session = Depends(get_db)):
 
 @app.post("/orders", response_model=OrderCreateResponse, status_code=201)
 def create_order_endpoint(payload: OrderCreateRequest, db: Session = Depends(get_db)):
+  # Map old product IDs to new prod_X format
+  product_id_map = {
+    'turbocharger': 'prod_1',
+    'brake-kit': 'prod_2',
+    'suspension': 'prod_3',
+    'exhaust': 'prod_4',
+    'racing-seat': 'prod_5',
+    'carbon-hood': 'prod_6',
+    'intercooler': 'prod_7',
+    'racing-wheel': 'prod_8',
+  }
+  
   product_ids = []
   total = 0.0
 
   for item in payload.items:
-    product = get_product_by_id(db, item.productId)
+    # Convert old ID to new ID if needed
+    product_id = product_id_map.get(item.productId, item.productId)
+    
+    product = get_product_by_id(db, product_id)
     if not product:
       raise HTTPException(status_code=400, detail=f"Unknown product: {item.productId}")
-    product_ids.append((item.productId, item.quantity))
+    product_ids.append((product_id, item.quantity))
     total += product.price * item.quantity
 
   order_id = f"ORD-{int(datetime.utcnow().timestamp() * 1000)}"
