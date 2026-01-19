@@ -169,7 +169,7 @@ export default function CheckoutPage() {
                 </div>
               </CardContent>
             </Card>
-            <Button type="submit" size="lg" className="w-full mt-8 text-lg font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/20">
+            <Button type="submit" size="lg" className="w-full backdrop-blur-md mt-8 text-lg font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/20">
               <Lock className="mr-2 h-5 w-5" />
               Place Order Securely
             </Button>
