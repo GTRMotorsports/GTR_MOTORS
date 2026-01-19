@@ -15,6 +15,7 @@ import heroBg5 from '@/lib/bg/image5.jpeg';
 import heroBg6 from '@/lib/bg/image6.jpeg';
 import heroBg7 from '@/lib/bg/image7.jpeg';
 import heroBg8 from '@/lib/bg/image8.jpeg';
+import gtrBanner from '@/lib/bg/gtr-banner.png';
 import { ArrowRight, ChevronRight, ShieldCheck } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { EmblaOptionsType } from 'embla-carousel';
@@ -184,16 +185,20 @@ export default function Home() {
             className="flex flex-col items-center"
           >
             <motion.div variants={fadeInUp} className="mb-6">
-              {/* Trust Badge Mockup */}
+              {/* Trust Badge Mockup - REPLACED WITH GTR BANNER */}
               <motion.div
-                className="relative w-32 h-32 mx-auto flex items-center justify-center bg-white/5 border border-red-500/60 rounded-full p-2 backdrop-blur"
-                animate={{ y: [0, -10, 0] }}
+                className="relative w-full max-w-[300px] h-24 mx-auto mb-6 flex items-center justify-center p-2"
+                // animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <ShieldCheck className="w-16 h-16 text-red-400 drop-shadow-lg" />
-                <div className="absolute -bottom-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider shadow-lg">
-                  14 Years of Trust
-                </div>
+                <Image
+                  src={gtrBanner}
+                  alt="GTR Banner"
+                  width={500}
+                  height={200}
+                  className="object-contain drop-shadow-2xl"
+                  priority
+                />
               </motion.div>
             </motion.div>
 
