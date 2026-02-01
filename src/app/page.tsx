@@ -4,7 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/product-card';
-import { products, brands } from '@/lib/data';
+import { fetchProducts, fetchBrands } from '@/lib/api';
+import type { Product, Brand } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import heroBg from '@/lib/bg/image.png';
 import heroBg1 from '@/lib/bg/image1.jpeg';
@@ -47,10 +48,34 @@ const leadingBrands = [
 ];
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const featuredProducts = products.slice(0, 8);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [emblaRefFeatured, emblaApiFeatured] = useEmblaCarousel({ loop: true, align: 'start' });
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, brandsData] = await Promise.all([
+          fetchProducts(),
+          fetchBrands(),
+        ]);
+        setProducts(productsData.items || []);
+        setBrands(brandsData || []);
+      } catch (err) {
+        console.error('Error loading data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const scrollPrevFeatured = useCallback(() => {
     if (emblaApiFeatured) emblaApiFeatured.scrollPrev();

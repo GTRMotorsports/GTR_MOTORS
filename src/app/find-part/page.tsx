@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useCallback, ChangeEvent } from 'react';
+import { useState, useCallback, ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ProductCard } from '@/components/product-card';
-import { products } from '@/lib/data';
+import { fetchProducts } from '@/lib/api';
+import type { Product } from '@/lib/types';
 import { UploadCloud, X, Wand2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -17,7 +18,20 @@ export default function FindPartPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<typeof products>([]);
+  const [results, setResults] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts();
+        setAllProducts(data.items);
+      } catch (err) {
+        console.error('Error loading products:', err);
+      }
+    };
+    loadProducts();
+  }, []);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -67,7 +81,7 @@ export default function FindPartPage() {
           // Simulate AI analysis
           setTimeout(() => {
             // Pick 3 random products as results
-            const shuffled = [...products].sort(() => 0.5 - Math.random());
+            const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
             setResults(shuffled.slice(0, 3));
             setStatus('success');
           }, 2000);

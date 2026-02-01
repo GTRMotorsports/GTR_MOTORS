@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '@/components/product-card';
-import { products, brands, categories } from '@/lib/data';
+import { fetchProducts, fetchBrands, fetchCategories, fetchManufacturers } from '@/lib/api';
+import type { Product, Brand } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,32 +19,93 @@ import Image from 'next/image';
 import carBg from '@/lib/bg/image4.jpeg';
 
 export default function CatalogPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [manufacturers, setManufacturers] = useState<{id:string;name:string;imageBase64?:string}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedManufacturer, setSelectedManufacturer] = useState('all');
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [productsData, brandsData, categoriesData, manufacturersData] = await Promise.all([
+          fetchProducts(),
+          fetchBrands(),
+          fetchCategories(),
+          fetchManufacturers(),
+        ]);
+        setProducts(productsData.items || []);
+        setBrands(brandsData || []);
+        setCategories(categoriesData || []);
+        setManufacturers(manufacturersData || []);
+        setMounted(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        console.error('Error loading products:', err);
+        setMounted(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand;
       const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const matchesManufacturer = selectedManufacturer === 'all' || (product.manufacturer || '') === selectedManufacturer;
 
-      return matchesSearch && matchesBrand && matchesCategory;
+      return matchesSearch && matchesBrand && matchesCategory && matchesManufacturer;
     });
-  }, [searchTerm, selectedBrand, selectedCategory]);
+    console.log('Filtered products:', filtered.length, { selectedBrand, selectedCategory, searchTerm });
+    return filtered;
+  }, [products, searchTerm, selectedBrand, selectedCategory, selectedManufacturer, brands, categories]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedBrand('all');
     setSelectedCategory('all');
+    setSelectedManufacturer('all');
   };
 
-  const hasActiveFilters = searchTerm !== '' || selectedBrand !== 'all' || selectedCategory !== 'all';
+  const hasActiveFilters = searchTerm !== '' || selectedBrand !== 'all' || selectedCategory !== 'all' || selectedManufacturer !== 'all';
 
   return (
     <div className="min-h-screen text-white overflow-x-hidden relative">
-      <div className="container mx-auto px-4 py-12 relative z-10">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-300 p-4 mx-4 mt-4 rounded-lg">
+          Error: {error}
+        </div>
+      )}
+      
+      {loading ? (
+        <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading products...</p>
+          </div>
+        </div>
+      ) : products.length === 0 && !error ? (
+        <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-gray-400">No products available</p>
+          </div>
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* Sidebar Filters - Sticky on Desktop */}
@@ -52,6 +114,22 @@ export default function CatalogPage() {
               <div className="flex items-center gap-2 mb-6 text-red-500">
                 <SlidersHorizontal className="w-5 h-5" />
                 <h2 className="text-xl font-bold font-headline tracking-wide uppercase">Filters</h2>
+              </div>
+
+              {/* Manufacturer Filter */}
+              <div className="space-y-3 mb-6">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Manufacturer</label>
+                <Select value={selectedManufacturer} onValueChange={setSelectedManufacturer}>
+                  <SelectTrigger className="w-full bg-[#0f0f12] border-white/10 text-white rounded-lg focus:ring-red-500/50">
+                    <SelectValue placeholder="All Manufacturers" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a1a] border-white/10 text-white max-h-60">
+                    <SelectItem value="all">All Manufacturers</SelectItem>
+                    {manufacturers.map(m => (
+                      <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Search */}
@@ -140,6 +218,20 @@ export default function CatalogPage() {
               </span>
             </div>
 
+            {/* Manufacturer quick filter icons */}
+            <div className="flex gap-3 items-center mb-6">
+              {manufacturers.map((m) => (
+                <button key={m.id} onClick={() => setSelectedManufacturer(selectedManufacturer === m.name ? 'all' : m.name)} className={`p-2 rounded border ${selectedManufacturer === m.name ? 'border-red-500' : 'border-white/10'}`}>
+                  {m.imageBase64 ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.imageBase64} alt={m.name} className="h-8 w-20 object-contain" />
+                  ) : (
+                    <div className="text-sm text-gray-300 px-2">{m.name}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+
             {filteredProducts.length > 0 ? (
               <motion.div
                 layout
@@ -180,7 +272,8 @@ export default function CatalogPage() {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

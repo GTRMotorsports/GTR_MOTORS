@@ -1,7 +1,7 @@
 from __future__ import annotations
 from sqlalchemy.orm import Session
-from .models import ProductDB, BrandDB, OrderDB, OrderItemDB
-from .data import products, brands
+from .models import ProductDB, BrandDB, OrderDB, OrderItemDB, ManufacturerDB
+from .data import products, brands, manufacturers
 
 
 def init_db(db: Session):
@@ -16,6 +16,7 @@ def init_db(db: Session):
       description=product.description,
       price=product.price,
       brand=product.brand,
+      manufacturer=product.manufacturer if hasattr(product, 'manufacturer') else None,
       category=product.category,
       imageUrl=product.imageUrl,
       imageHint=product.imageHint,
@@ -34,6 +35,15 @@ def init_db(db: Session):
     )
     db.add(db_brand)
 
+  for manu in manufacturers:
+    db_m = ManufacturerDB(
+      id=manu.id,
+      name=manu.name,
+      imageBase64=manu.imageBase64,
+      models=','.join(manu.models) if manu.models else None,
+    )
+    db.add(db_m)
+
   db.commit()
 
 
@@ -45,6 +55,7 @@ def list_products(
   db: Session,
   q: str | None = None,
   brand: str | None = None,
+  manufacturer: str | None = None,
   category: str | None = None,
   min_price: float | None = None,
   max_price: float | None = None,
@@ -61,6 +72,9 @@ def list_products(
 
   if brand:
     query = query.filter(ProductDB.brand.ilike(f"%{brand}%"))
+
+  if manufacturer:
+    query = query.filter(ProductDB.manufacturer.ilike(f"%{manufacturer}%"))
 
   if category:
     query = query.filter(ProductDB.category.ilike(f"%{category}%"))
@@ -81,6 +95,10 @@ def get_categories(db: Session) -> list[str]:
 
 def get_brands(db: Session) -> list[BrandDB]:
   return db.query(BrandDB).all()
+
+
+def get_manufacturers(db: Session) -> list[ManufacturerDB]:
+  return db.query(ManufacturerDB).all()
 
 
 def create_order(db: Session, order_id: str, date: str, total: float, product_ids: list[tuple[str, int]]) -> OrderDB:

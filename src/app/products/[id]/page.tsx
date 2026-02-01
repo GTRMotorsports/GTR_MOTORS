@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { products } from '@/lib/data';
+import { fetchProductById, fetchProducts } from '@/lib/api';
+import type { Product } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Star, ShoppingCart, Minus, Plus } from 'lucide-react';
@@ -11,19 +12,57 @@ import { useCart } from '@/context/cart-context';
 import { ProductCard } from '@/components/product-card';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
-  const product = products.find((p) => p.id === params.id);
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        const productData = await fetchProductById(params.id);
+        setProduct(productData);
 
-  if (!product) {
+        // Fetch related products by category
+        const allProducts = await fetchProducts({ category: productData.category });
+        const related = allProducts.items
+          .filter(p => p.id !== productData.id)
+          .slice(0, 4);
+        setRelatedProducts(related);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Product not found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     notFound();
   }
 
-  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const relatedProductsList = relatedProducts;
 
-  const fullStars = Math.floor(product.rating);
-  const halfStar = product.rating % 1 !== 0;
+  const rating = product.rating ?? 0;
+  const reviewCount = product.reviewCount ?? 0;
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 !== 0;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -57,12 +96,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 <Star key={`full-${i}`} className="w-5 h-5 fill-current" />
               ))}
               {halfStar && <Star key="half" className="w-5 h-5 fill-current" />}
-              {[...Array(5 - Math.ceil(product.rating))].map((_, i) => (
+              {[...Array(5 - Math.ceil(rating))].map((_, i) => (
                 <Star key={`empty-${i}`} className="w-5 h-5 text-gray-400" />
               ))}
             </div>
             <span className="ml-2 text-sm text-muted-foreground">
-              {product.rating.toFixed(1)} ({product.reviewCount} reviews)
+              {rating.toFixed(1)} ({reviewCount} reviews)
             </span>
           </div>
 

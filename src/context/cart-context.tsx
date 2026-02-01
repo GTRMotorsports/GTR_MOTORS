@@ -3,7 +3,6 @@
 import type { CartItem, Product } from '@/lib/types';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { products } from '@/lib/data';
 
 interface CartContextType {
   cartItems: CartItem[];

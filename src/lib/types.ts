@@ -3,31 +3,32 @@ export type Product = {
   name: string;
   description: string;
   price: number;
+  manufacturer?: string | null;
   brand: string;
-  category: 'Engine' | 'Brakes' | 'Suspension' | 'Exhaust' | 'Interior' | 'Exterior';
+  category: 'Engine' | 'Brakes' | 'Suspension' | 'Exhaust' | 'Interior' | 'Exterior' | string;
   imageUrl: string;
-  imageHint: string;
-  rating: number;
-  reviewCount: number;
-  discount?: number;
+  imageHint?: string | null;
+  rating?: number;
+  reviewCount?: number;
+  discount?: number | null;
 };
 
 export type Brand = {
   id: string;
   name: string;
-  logoUrl: string;
-  logoHint: string;
-};
-
-export type Order = {
-  id: string;
-  date: string;
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  total: number;
-  items: CartItem[];
+  logoUrl?: string | null;
+  logoHint?: string | null;
 };
 
 export type CartItem = {
   product: Product;
   quantity: number;
+};
+
+export type Order = {
+  id: string;
+  date: string;
+  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | string;
+  total: number;
+  items: CartItem[];
 };

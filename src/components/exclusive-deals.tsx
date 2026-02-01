@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ProductCard } from './product-card';
-import { products } from '@/lib/data';
+import { fetchProducts } from '@/lib/api';
+import type { Product } from '@/lib/types';
 
 export function ExclusiveDeals() {
+    const [discountedProducts, setDiscountedProducts] = useState<Product[]>([]);
+    
     // Set the target date to 2 days, 23 hours from now to match the "02 23" approximate look initially
     // In a real app, this would come from a backend or config
     const [timeLeft, setTimeLeft] = useState({
@@ -14,6 +17,21 @@ export function ExclusiveDeals() {
         minutes: 59,
         seconds: 9
     });
+
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                const data = await fetchProducts();
+                const discounted = data.items
+                    .filter(product => product.discount && product.discount > 0)
+                    .slice(0, 4);
+                setDiscountedProducts(discounted);
+            } catch (err) {
+                console.error('Error loading products:', err);
+            }
+        };
+        loadProducts();
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -42,8 +60,6 @@ export function ExclusiveDeals() {
         { label: 'MINUTES', value: timeLeft.minutes },
         { label: 'SECONDS', value: timeLeft.seconds }
     ];
-
-    const discountedProducts = products.filter(product => product.discount && product.discount > 0).slice(0, 4);
 
     return (
         <section className="py-10 bg-[#1a1a1a] flex flex-col items-center justify-center text-center">

@@ -12,6 +12,7 @@ class ProductDB(Base):
   description = Column(Text, nullable=False)
   price = Column(Float, nullable=False)
   brand = Column(String, index=True, nullable=False)
+  manufacturer = Column(String, index=True, nullable=True)
   category = Column(String, index=True, nullable=False)
   imageUrl = Column(String, nullable=False)
   imageHint = Column(String, nullable=False)
@@ -29,6 +30,15 @@ class BrandDB(Base):
   name = Column(String, unique=True, index=True, nullable=False)
   logoUrl = Column(String, nullable=False)
   logoHint = Column(String, nullable=False)
+
+
+class ManufacturerDB(Base):
+  __tablename__ = "manufacturers"
+
+  id = Column(String, primary_key=True, index=True)
+  name = Column(String, unique=True, index=True, nullable=False)
+  imageBase64 = Column(Text, nullable=True)
+  models = Column(Text, nullable=True)  # comma-separated list of models
 
 
 class OrderItemDB(Base):
